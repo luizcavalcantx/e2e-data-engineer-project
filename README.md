@@ -46,4 +46,4 @@ API → S3 (raw, partitioned by date) → Snowflake → dbt → Airflow → Stre
 
 ## 👤 Author
 **Luiz Cavalcante**
-[LinkedIn] · [GitHub]
+[LinkedIn](https://www.linkedin.com/in/luizgustavocavalcantes/) · [GitHub](https://github.com/luizcavalcantx)
