@@ -33,7 +33,7 @@ API → S3 (raw, partitioned by date) → Snowflake → dbt → Airflow → Stre
 
 ## 🚀 Project Status
 - [x] Repository structure setup
-- [ ] Data extraction (Week 1)
+- [Doing] Data extraction (Week 1)
 - [ ] dbt transformations (Week 2)
 - [ ] Airflow orchestration + CI/CD (Week 3)
 - [ ] Consumption layer & polish (Week 4)
