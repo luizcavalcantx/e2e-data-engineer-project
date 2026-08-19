@@ -22,3 +22,10 @@ for coin_data in data:
 
 for coin in lista_coins:
     print(f"{coin.name} ({coin.symbol.upper()}): ${coin.current_price}")
+
+
+## Transforming into a dictionay list again
+parquet_coins = []
+for coin_parquet in lista_coins:
+    x = coin_parquet.model_dump()
+    parquet_coins.append(x)
