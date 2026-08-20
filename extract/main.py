@@ -1,6 +1,8 @@
 import requests
 import json
 from models import CoinMarketData
+import pandas as pd
+from datetime import date
 
 url = "https://api.coingecko.com/api/v3/coins/markets"
 params = {
@@ -15,17 +17,17 @@ params = {
 response = requests.get(url, params=params)
 data = response.json()
 
-lista_coins = []
+coins_list = []
 for coin_data in data:
     coin = CoinMarketData(**coin_data)
-    lista_coins.append(coin)
-
-for coin in lista_coins:
-    print(f"{coin.name} ({coin.symbol.upper()}): ${coin.current_price}")
-
+    coins_list.append(coin)
 
 ## Transforming into a dictionay list again
-parquet_coins = []
-for coin_parquet in lista_coins:
-    x = coin_parquet.model_dump()
-    parquet_coins.append(x)
+# or: dict_coin = [coin.model() for coin in coins_list]
+dict_coins = []
+for coin_dict in coins_list:
+    x = coin_dict.model_dump()
+    dict_coins.append(x)
+
+df = pd.DataFrame(dict_coins)
+df.to_parquet(f"extract/tmp/coins_parquet_{date.today()}.parquet", index=False)
