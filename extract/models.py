@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional
 
@@ -42,3 +42,32 @@ class CoinMarketData(BaseModel):
 
     roi: Optional[ROI] = None
     last_updated: Optional[datetime] = None
+
+class CoinLinks(BaseModel):
+    homepage: list[str]
+    blockchain_site: list[str]
+    official_forum_url: list[str]
+    subreddit_url: Optional[str] = None
+
+
+class CoinImage(BaseModel):
+    thumb: Optional[str] = None
+    small: Optional[str] = None
+    large: Optional[str] = None
+
+
+class CoinInfoData(BaseModel):
+    id: str
+    symbol: str
+    name: str
+    categories: list[Optional[str]] = []
+    links: CoinLinks
+    image: CoinImage
+    country_origin: Optional[str] = None
+    genesis_date: Optional[str] = None
+    market_cap_rank: Optional[int] = None
+
+class PriceHistoryData(BaseModel):
+    prices: list[list[float]]
+    market_caps: list[list[float]]
+    total_volumes: list[list[float]]
