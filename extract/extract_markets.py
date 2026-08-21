@@ -4,6 +4,9 @@ from models import CoinMarketData
 import pandas as pd
 from datetime import date
 from upload_s3 import upload_to_s3
+from logger_config import setup_logger
+
+logger = setup_logger("extract_markets")
 
 url = "https://api.coingecko.com/api/v3/coins/markets"
 params = {
@@ -14,6 +17,8 @@ params = {
     "page": 1,
     "sparkline": False
 }
+
+logger.info("Starting extraction")
 
 response = requests.get(url, params=params)
 data = response.json()
@@ -31,9 +36,15 @@ for coin_dict in coins_list:
     dict_coins.append(x)
 
 df = pd.DataFrame(dict_coins)
+logger.info(f"Sucessfully fetched data for {len(data)} coins")
 
 local_path = f"extract/tmp/coins_parquet_{date.today()}.parquet"
 df.to_parquet(local_path, index=False)
 
 s3_key = f"raw/coins_markets/dt={date.today()}/coins_parquet_{date.today()}.parquet"
-upload_to_s3(local_path, s3_key)
+
+try:
+    upload_to_s3(local_path, s3_key)
+    logger.info(f"Successfully upload to S3: {s3_key}")
+except Exception as e:
+    logger.error(f"Failed to upload to S3: {e}")
