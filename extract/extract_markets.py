@@ -3,6 +3,7 @@ import json
 from models import CoinMarketData
 import pandas as pd
 from datetime import date
+from upload_s3 import upload_to_s3
 
 url = "https://api.coingecko.com/api/v3/coins/markets"
 params = {
@@ -30,4 +31,9 @@ for coin_dict in coins_list:
     dict_coins.append(x)
 
 df = pd.DataFrame(dict_coins)
-df.to_parquet(f"extract/tmp/coins_parquet_{date.today()}.parquet", index=False)
+
+local_path = f"extract/tmp/coins_parquet_{date.today()}.parquet"
+df.to_parquet(local_path, index=False)
+
+s3_key = f"raw/coins_markets/dt={date.today()}/coins_parquet_{date.today()}.parquet"
+upload_to_s3(local_path, s3_key)
