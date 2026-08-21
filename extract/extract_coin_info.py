@@ -25,8 +25,6 @@ for coin_id in coin_ids:
     coins_info.append(coin.model_dump())
     time.sleep(6) # to rate limit of free coingecko API
 
-print(coins_info)
-
 df = pd.DataFrame(coins_info)
 local_path = f"extract/tmp/coins_info_{date.today()}.parquet"
 df.to_parquet(local_path, index=False)
