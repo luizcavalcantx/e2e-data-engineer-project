@@ -22,6 +22,7 @@ for coin_id in coin_ids:
         "interval": "daily"
     }
     response = requests.get(url, params=params)
+    response.raise_for_status()
     coin = PriceHistoryData(**response.json())
     coin_dict = coin.model_dump()
     coin_dict["coin_id"] = coin_id

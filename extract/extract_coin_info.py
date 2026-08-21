@@ -25,6 +25,7 @@ for coin_id in coin_ids:
         "sparkline": False
     }
     response = requests.get(url, params=params)
+    response.raise_for_status()
     coin = CoinInfoData(**response.json())
     coins_info.append(coin.model_dump())
     time.sleep(6) # to rate limit of free coingecko API
