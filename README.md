@@ -1,49 +1,56 @@
 # E2E Data Engineer Project
 
 ## 📋 Overview
-An end-to-end data engineering pipeline that extracts data from a public API, lands it in a cloud data lake, transforms it into analytics-ready models, and orchestrates the whole workflow with modern DevOps practices.
+An end-to-end data engineering pipeline that extracts cryptocurrency market data from a public API, lands it in a cloud data lake, transforms it into analytics-ready models, and orchestrates the whole workflow with modern DevOps practices.
 
 ## 🏗️ Architecture
-API → S3 (raw, partitioned by date) → Snowflake → dbt → Airflow → Streamlit/Metabase
+CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAGING → MARTS) → dbt → Airflow → Streamlit/Metabase
 
 *(Diagram to be added in `/docs`)*
 
 ## 🛠️ Tech Stack
-- **Extraction:** Python (`requests`, `pydantic`, `python-dotenv`, `boto3`)
+- **Extraction:** Python (`requests`, `pydantic`, `python-dotenv`, `boto3`, `pandas`)
 - **Raw Storage:** AWS S3 (date-partitioned, Parquet format)
-- **Data Warehouse:** Snowflake (external stage + `COPY INTO`)
-- **Transformation:** dbt (staging & marts layers, tests, documentation)
+- **Data Warehouse:** Snowflake — `CRYPTO_PIPELINE` database, `RAW` / `STAGING` / `MARTS` schemas, `CRYPTO_PIPELINE_WH` (X-Small) warehouse, external stage + `COPY INTO`
+- **Transformation:** dbt (project: `crypto_pipeline`) — staging & marts layers, tests, documentation
 - **Orchestration:** Apache Airflow (Docker Compose)
 - **CI/CD:** GitHub Actions
 - **Consumption Layer:** Streamlit / Metabase
-- **Supporting Tools:** Docker, pytest, logging, secrets management
+- **Supporting Tools:** Docker, pytest, structured logging, secrets management (`.env`)
 
 ## 📁 Project Structure
-├── extract/ # API extraction scripts
+├── extract/ # API extraction scripts (Pydantic models, S3 upload)
 
 ├── dags/ # Airflow DAGs
 
-├── dbt_project/ # dbt models (staging + marts)
+├── crypto_pipeline/ # dbt project (staging + marts models)
 
 ├── .github/workflows/ # CI/CD pipelines
 
-├── docs/ # Documentation and diagrams
+├── docs/ # Documentation, diagrams, snowflake_setup.sql
 
 └── docker-compose.yml # Airflow stack (local orchestration)
 
 ## 🚀 Project Status
 - [x] Repository structure setup
-- [Doing] Data extraction (Week 1)
-- [ ] dbt transformations (Week 2)
-- [ ] Airflow orchestration + CI/CD (Week 3)
-- [ ] Consumption layer & polish (Week 4)
+- [x] Data extraction (CoinGecko API, 3 endpoints, 5 coins) — Week 1
+- [x] AWS S3 raw storage (date-partitioned Parquet)
+- [x] Snowflake warehouse setup (Storage Integration, External Stage, RAW tables)
+- [Doing] dbt transformations (staging models, tests) — Week 2
+- [ ] Airflow orchestration + CI/CD — Week 3
+- [ ] Consumption layer & polish — Week 4
 
 ## ⚙️ How to Run
 *(To be completed as the project progresses — setup instructions, environment variables, `docker-compose up`, etc.)*
 
 ## 📊 Data Source
-*(To be defined — public API selection in progress)*
+[CoinGecko API](https://www.coingecko.com/en/api) (free tier, no key required)
+- `/coins/markets` → daily market snapshot
+- `/coins/{id}` → coin metadata
+- `/coins/{id}/market_chart` → historical price data
+
+Tracked coins: Bitcoin, Ethereum, Tether, Solana, Cardano
 
 ## 👤 Author
 **Luiz Cavalcante**
-[LinkedIn](https://www.linkedin.com/in/luizgustavocavalcantes/) · [GitHub](https://github.com/luizcavalcantx)
+[LinkedIn](https://www.linkedin.com/in/luizcavalcantx/) · [GitHub](https://github.com/luizcavalcantx)
