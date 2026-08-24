@@ -1,0 +1,7 @@
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: coins_markets
+      - name: coin_info
+      - name: price_history
