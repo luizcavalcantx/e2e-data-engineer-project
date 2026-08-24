@@ -1,4 +1,4 @@
-
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
 name: 'crypto_pipeline'
 version: '1.0.0'
 
@@ -15,7 +15,6 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
   crypto_pipeline:
     staging:

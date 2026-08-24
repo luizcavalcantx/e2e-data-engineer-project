@@ -1,0 +1,7 @@
+models:
+  - name: stg_coins_markets
+    columns:
+      - name: coin_id
+        tests:
+          - not_null
+          - unique

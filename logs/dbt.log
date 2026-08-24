@@ -98,3 +98,18 @@ Happy modeling!
 [0m12:51:52.894138 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000180BE035410>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000180C46D6590>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000180C46D7AD0>]}
 [0m12:51:52.895142 [debug] [MainThread]: Flushing usage events
 [0m12:51:53.835229 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m20:35:30.864716 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BEF2642710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BEF7D75790>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BEF7D690D0>]}
+
+
+============================== 20:35:30.900661 | 9cebe048-7ef3-4b54-8f55-0dd3ec8f3ae6 ==============================
+[0m20:35:30.900661 [info ] [MainThread]: Running with dbt=1.12.3
+[0m20:35:30.901673 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'no_print': 'None', 'version_check': 'True', 'target_path': 'None', 'maximum_seed_size_mib': '1', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'printer_width': '80', 'write_json': 'True', 'introspect': 'True', 'log_cache_events': 'False', 'empty': 'None', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'profiles_dir': 'C:\\Users\\gusta\\.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'indirect_selection': 'eager', 'hints_enabled': 'True', 'use_colors': 'True', 'use_experimental_parser': 'False', 'invocation_command': 'dbt test --select stg_coin_markets', 'log_path': 'logs'}
+[0m20:35:30.902669 [error] [MainThread]: [[31mERROR[0m]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path C:\Users\gusta\OneDrive\Documentos\codeup_project\dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m20:35:30.904670 [debug] [MainThread]: Command `dbt test` failed at 20:35:30.904670 after 0.17 seconds
+[0m20:35:30.905673 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BEF7ED1010>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BEF7E39B10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001BEF7E3BF50>]}
+[0m20:35:30.906670 [debug] [MainThread]: Flushing usage events
+[0m20:35:32.281586 [debug] [MainThread]: An error was encountered while trying to flush usage events
