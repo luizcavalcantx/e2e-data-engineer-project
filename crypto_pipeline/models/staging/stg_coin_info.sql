@@ -8,8 +8,8 @@ final as (
         id as coin_id,
         symbol as symbol,
         name as name,
-        categories[0]::STRING as first_category,
-        links:homepage[0]::STRING as homepage_link,
+        categories as categories,
+        links as links,
         COUNTRY_ORIGIN as country_region,
         GENESIS_DATE as creation_date,
         LAST_UPDATED as last_updated,
@@ -19,3 +19,6 @@ final as (
 
 select *
 from final
+
+categories[0]::STRING as first_category,
+links:homepage[0]::STRING as homepage_link,
