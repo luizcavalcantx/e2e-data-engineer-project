@@ -19,3 +19,6 @@ models:
   crypto_pipeline:
     staging:
       +materialized: view
+    marts:
+      +materialized: table
+      +schema: marts
