@@ -3,7 +3,7 @@ with source as (
 ),
 
 final as (
-    select
+    select distinct
         coin_id,
         TO_TIMESTAMP_NTZ(f.value[0]::NUMBER, 3) as date_timestamp,
         round(f.value[1],2) as price_value,
