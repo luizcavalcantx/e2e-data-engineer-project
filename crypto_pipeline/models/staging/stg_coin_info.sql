@@ -4,7 +4,7 @@ with source as (
 ),
 
 final as (
-    select
+    select distinct
         id as coin_id,
         symbol as symbol,
         name as name,

@@ -10,3 +10,9 @@ models:
       - name: coin_id
         tests:
           - not_null
+  - name: stg_coin_info
+    columns:
+      - name: coin_id
+        tests:
+          - not_null
+          - unique
