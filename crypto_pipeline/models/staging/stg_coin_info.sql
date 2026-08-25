@@ -19,6 +19,3 @@ final as (
 
 select *
 from final
-
-categories[0]::STRING as first_category,
-links:homepage[0]::STRING as homepage_link,
