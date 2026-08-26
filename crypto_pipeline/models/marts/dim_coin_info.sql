@@ -11,7 +11,7 @@ select
     categories[0]::STRING as first_category,
     links:homepage[0]::STRING as first_link,
     creation_date,
-    loaded_at
+    current_timestamp() as loaded_at
 from stg)
 
 select *
