@@ -1,11 +1,35 @@
 models:
   - name: dim_coin_info
+    description: "This table contains the basic information about the 5 cryptocurrencies we have in our database, like name, category, link of homepage, and for some coins the creation date."
     columns:
       - name: coin_id
+        description: "Unique identifier for each coin."
         tests:
           - not_null
           - unique
+
+      - name: symbol
+        description: "Ticker symbol used to represent the coin (e.g. BTC, ETH)."
+
+      - name: name
+        description: "Full display name of the coin (e.g. Bitcoin, Ethereum)."
+
+      - name: first_category
+        description: "The first category listed for the coin in the source data, used as a simplified representation of its primary classification (e.g. Smart Contract Platform, Stablecoin)."
+
+      - name: homepage_link
+        description: "URL of the coin's official homepage, extracted from the first entry in the source links object."
+
+      - name: country_region
+        description: "Country of origin associated with the coin, when available in the source data."
+
+      - name: creation_date
+        description: "Date the coin was originally created or launched (genesis date), when available in the source data."
+
+      - name: loaded_at
+        description: "Timestamp indicating when this row was processed and loaded by dbt into the marts layer."
   - name: fct_daily_market_snapshot
+    description: "Daily market snapshot for the 5 tracked cryptocurrencies, combining market metrics from CoinGecko with descriptive attributes from dim_coin_info. Each row represents the market state of a coin at a given update timestamp."
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -14,9 +38,90 @@ models:
               - last_updated
     columns:
       - name: coin_id
+        description: "Unique identifier for each coin."
         tests:
           - not_null
+
+      - name: symbol
+        description: "Ticker symbol used to represent the coin (e.g. BTC, ETH)."
+
+      - name: name
+        description: "Full display name of the coin (e.g. Bitcoin, Ethereum)."
+
+      - name: link
+        description: "URL of the coin's official homepage, sourced from dim_coin_info."
+
+      - name: image
+        description: "URL of the coin's logo/image, as provided by the CoinGecko API."
+
+      - name: current_price
+        description: "Current market price of the coin in USD, rounded to 2 decimal places."
+
+      - name: market_cap
+        description: "Total market capitalization of the coin in USD (current price multiplied by circulating supply)."
+
+      - name: market_cap_rank
+        description: "Coin's rank by market capitalization relative to other cryptocurrencies."
+
+      - name: fully_diluted_valuation
+        description: "Projected market capitalization if the max supply of the coin were fully in circulation."
+
+      - name: total_volume
+        description: "Total trading volume of the coin in USD over the last 24 hours."
+
+      - name: high_24h
+        description: "Highest price reached by the coin in the last 24 hours, rounded to 2 decimal places."
+
+      - name: low_24h
+        description: "Lowest price reached by the coin in the last 24 hours, rounded to 2 decimal places."
+
+      - name: price_change_24h
+        description: "Absolute price change of the coin in USD over the last 24 hours."
+
+      - name: price_change_percentage_24h
+        description: "Percentage price change of the coin over the last 24 hours."
+
+      - name: market_cap_change_24h
+        description: "Absolute change in market capitalization over the last 24 hours."
+
+      - name: market_cap_change_percentage_24h
+        description: "Percentage change in market capitalization over the last 24 hours."
+
+      - name: circulating_supply
+        description: "Number of coins currently circulating in the market."
+
+      - name: total_supply
+        description: "Total number of coins that currently exist, including those not yet in circulation."
+
+      - name: max_supply
+        description: "Maximum number of coins that will ever exist for this cryptocurrency, when defined."
+
+      - name: ath
+        description: "All-time high price reached by the coin, in USD."
+
+      - name: ath_change_percentage
+        description: "Percentage difference between the current price and the all-time high."
+
+      - name: ath_date
+        description: "Date and time when the all-time high price was reached."
+
+      - name: atl
+        description: "All-time low price reached by the coin, in USD."
+
+      - name: atl_change_percentage
+        description: "Percentage difference between the current price and the all-time low."
+
+      - name: atl_date
+        description: "Date and time when the all-time low price was reached."
+
+      - name: last_updated
+        description: "Timestamp indicating when this data snapshot was last updated by the CoinGecko API."
+
+      - name: loaded_at
+        description: "Timestamp indicating when this row was processed and loaded by dbt into the marts layer."
+
   - name: fct_price_history
+    description: "Historical time series of price, market cap, and trading volume for the 5 tracked cryptocurrencies, unpivoted from CoinGecko's market chart data into one row per coin per timestamp."
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -25,5 +130,33 @@ models:
               - date_timestamp
     columns:
       - name: coin_id
+        description: "Unique identifier for each coin."
         tests:
           - not_null
+
+      - name: symbol
+        description: "Ticker symbol used to represent the coin (e.g. BTC, ETH), sourced from dim_coin_info."
+
+      - name: link
+        description: "URL of the coin's official homepage, sourced from dim_coin_info."
+
+      - name: date_timestamp
+        description: "Full timestamp of the price/market data point, converted from the source Unix millisecond value."
+
+      - name: value_date
+        description: "Calendar date extracted from date_timestamp, used for daily-level analysis."
+
+      - name: value_time
+        description: "Time of day (HH24:MI) extracted from date_timestamp, used for intraday analysis."
+
+      - name: price_value
+        description: "Price of the coin in USD at this timestamp, rounded to 2 decimal places."
+
+      - name: market_caps_value
+        description: "Market capitalization of the coin in USD at this timestamp, rounded to 2 decimal places."
+
+      - name: total_volume_value
+        description: "Trading volume of the coin in USD at this timestamp, rounded to 2 decimal places."
+
+      - name: loaded_at
+        description: "Timestamp indicating when this row was processed and loaded by dbt into the marts layer."
