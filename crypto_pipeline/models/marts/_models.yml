@@ -1,0 +1,29 @@
+models:
+  - name: dim_coin_info
+    columns:
+      - name: coin_id
+        tests:
+          - not_null
+          - unique
+  - name: fct_daily_market_snapshot
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - coin_id
+              - last_updated
+    columns:
+      - name: coin_id
+        tests:
+          - not_null
+  - name: fct_price_history
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - coin_id
+              - date_timestamp
+    columns:
+      - name: coin_id
+        tests:
+          - not_null
