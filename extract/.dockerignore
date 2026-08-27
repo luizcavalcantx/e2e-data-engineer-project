@@ -1,0 +1,10 @@
+tests/
+conftest.py
+testes.py
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+logs/
+tmp/
