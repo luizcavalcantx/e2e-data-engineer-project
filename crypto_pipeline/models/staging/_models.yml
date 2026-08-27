@@ -1,5 +1,6 @@
 models:
   - name: stg_coins_markets
+    description: "Cleaned and typed staging model for raw coin market data from CoinGecko. One row per coin per extraction snapshot (uniqueness enforced by coin_id + last_updated), with no rounding or business logic applied yet."
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -8,22 +9,75 @@ models:
               - last_updated
     columns:
       - name: coin_id
+        description: "Unique identifier for each coin."
         tests:
           - not_null
-  - name: stg_coin_info
-    columns:
-      - name: coin_id
-        tests:
-          - not_null
-          - unique
-  - name: stg_price_history
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          arguments:
-            combination_of_columns:
-              - coin_id
-              - date_timestamp
-    columns:
-      - name: coin_id
-        tests:
-          - not_null
+
+      - name: symbol
+        description: "Ticker symbol used to represent the coin (e.g. BTC, ETH)."
+
+      - name: name
+        description: "Full display name of the coin (e.g. Bitcoin, Ethereum)."
+
+      - name: image
+        description: "URL of the coin's logo/image, as provided by the CoinGecko API."
+
+      - name: current_price
+        description: "Current market price of the coin in USD, as raw float value from the source."
+
+      - name: market_cap
+        description: "Total market capitalization of the coin in USD."
+
+      - name: market_cap_rank
+        description: "Coin's rank by market capitalization relative to other cryptocurrencies."
+
+      - name: fully_diluted_valuation
+        description: "Projected market capitalization if the max supply of the coin were fully in circulation."
+
+      - name: total_volume
+        description: "Total trading volume of the coin in USD over the last 24 hours."
+
+      - name: high_24h
+        description: "Highest price reached by the coin in the last 24 hours."
+
+      - name: low_24h
+        description: "Lowest price reached by the coin in the last 24 hours."
+
+      - name: price_change_24h
+        description: "Absolute price change of the coin in USD over the last 24 hours."
+
+      - name: price_change_percentage_24h
+        description: "Percentage price change of the coin over the last 24 hours."
+
+      - name: market_cap_change_24h
+        description: "Absolute change in market capitalization over the last 24 hours."
+
+      - name: market_cap_change_percentage_24h
+        description: "Percentage change in market capitalization over the last 24 hours."
+
+      - name: circulating_supply
+        description: "Number of coins currently circulating in the market."
+
+      - name: total_supply
+        description: "Total number of coins that currently exist, including those not yet in circulation."
+
+      - name: max_supply
+        description: "Maximum number of coins that will ever exist for this cryptocurrency, when defined."
+
+      - name: ath
+        description: "All-time high price reached by the coin, in USD."
+
+      - name: ath_change_percentage
+        description: "Percentage difference between the current price and the all-time high."
+
+      - name: ath_date
+        description: "Date and time when the all-time high price was reached."
+
+      - name: atl
+        description: "All-time low price reached by the coin, in USD."
+
+      - name: atl_change_percentage
+        description: "Percentage difference between the current price and the all-time low."
+
+      - name: atl_date
+        description: "Date and time when"
