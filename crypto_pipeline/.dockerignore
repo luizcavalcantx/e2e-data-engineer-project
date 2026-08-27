@@ -1,0 +1,18 @@
+# Ambiente virtual (dependências vêm do requirements.txt)
+.venv/
+
+# Segredos (profiles.yml pode conter credenciais - injetar em runtime)
+.env
+
+# Artefatos gerados pelo dbt (recriados a cada run, não precisam ir na imagem)
+target/
+dbt_packages/
+logs/
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Controle de versão
+.git/
+.gitignore
