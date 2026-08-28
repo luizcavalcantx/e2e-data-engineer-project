@@ -14,16 +14,9 @@ services:
       - postgres
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-    command: >
-      bash -c "airflow db migrate &&
-               airflow users create
-                 --username ${AIRFLOW_ADMIN_USER}
-                 --password ${AIRFLOW_ADMIN_PASSWORD}
-                 --firstname ${AIRFLOW_ADMIN_FIRSTNAME}
-                 --lastname ${AIRFLOW_ADMIN_LASTNAME}
-                 --role Admin
-                 --email ${AIRFLOW_ADMIN_EMAIL}"
+    command: bash -c "pip install --no-cache-dir apache-airflow-providers-fab && airflow db migrate && airflow users create --username ${AIRFLOW_ADMIN_USER} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname ${AIRFLOW_ADMIN_FIRSTNAME} --lastname ${AIRFLOW_ADMIN_LASTNAME} --role Admin --email ${AIRFLOW_ADMIN_EMAIL}"
 
   airflow-webserver:
     image: apache/airflow:3.3.1
@@ -32,13 +25,14 @@ services:
       - airflow-init
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
     ports:
       - "8080:8080"
-    command: api-server
+    command: bash -c "pip install --no-cache-dir apache-airflow-providers-fab && airflow api-server"
 
   airflow-scheduler:
     image: apache/airflow:3.3.1
@@ -47,12 +41,13 @@ services:
       - airflow-init
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - /var/run/docker.sock:/var/run/docker.sock
-    command: scheduler
+    command: bash -c "pip install --no-cache-dir apache-airflow-providers-fab && airflow scheduler"
 
 volumes:
   postgres-db-volume:
