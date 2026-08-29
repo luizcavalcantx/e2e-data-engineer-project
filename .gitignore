@@ -8,5 +8,7 @@ __pycache__/
 testes.py
 *.parquet
 
+logs/
+
 # Secrets
 .env
