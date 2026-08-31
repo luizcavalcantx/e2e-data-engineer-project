@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 from models import CoinMarketData
@@ -39,7 +40,9 @@ for coin_dict in coins_list:
 df = pd.DataFrame(dict_coins)
 logger.info(f"Sucessfully fetched data for {len(data)} coins")
 
-local_path = f"extract/tmp/coins_parquet_{date.today()}.parquet"
+os.makedirs("tmp", exist_ok=True)
+
+local_path = f"tmp/coins_parquet_{date.today()}.parquet"
 df.to_parquet(local_path, index=False)
 
 s3_key = f"raw/coins_markets/dt={date.today()}/coins_parquet_{date.today()}.parquet"
@@ -47,5 +50,7 @@ s3_key = f"raw/coins_markets/dt={date.today()}/coins_parquet_{date.today()}.parq
 try:
     upload_to_s3(local_path, s3_key)
     logger.info(f"Successfully upload to S3: {s3_key}")
+    os.remove(local_path)
+    logger.info(f"Removed local file: {local_path}")
 except Exception as e:
     logger.error(f"Failed to upload to S3: {e}")

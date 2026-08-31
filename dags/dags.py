@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from docker.types import Mount
 
@@ -23,6 +23,8 @@ with DAG(
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
+        retries=3,
+        retry_delay=timedelta(seconds=10),
     )
 
     extract_coin_info_task = DockerOperator(
@@ -32,6 +34,8 @@ with DAG(
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
+        retries=3,
+        retry_delay=timedelta(seconds=20),
     )
 
     extract_price_history_task = DockerOperator(
@@ -41,6 +45,8 @@ with DAG(
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
+        retries=3,
+        retry_delay=timedelta(seconds=30),
     )
 
     # --- Carga S3 -> Snowflake RAW (SnowflakeOperator) ---
