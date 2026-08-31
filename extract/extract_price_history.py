@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 from models import PriceHistoryData
@@ -8,6 +9,8 @@ from upload_s3 import upload_to_s3
 from logger_config import setup_logger
 
 logger = setup_logger("extract_price_history")
+
+time.sleep(30)
 
 coin_ids = ['bitcoin','ethereum','tether','solana','cardano']
 base_url = "https://api.coingecko.com/api/v3/coins/{id}/market_chart"
@@ -32,7 +35,9 @@ for coin_id in coin_ids:
 df = pd.DataFrame(coins_info)
 logger.info(f"Successfully fetched data for {len(df)} coins")
 
-local_path = f"extract/tmp/price_history_{date.today()}.parquet"
+os.makedirs("tmp", exist_ok=True)
+
+local_path = f"tmp/price_history_{date.today()}.parquet"
 df.to_parquet(local_path, index=False)
 
 s3_key = f"raw/price_history/price_history_{date.today()}.parquet"
@@ -40,5 +45,7 @@ s3_key = f"raw/price_history/price_history_{date.today()}.parquet"
 try:
     upload_to_s3(local_path, s3_key)
     logger.info(f"Successfully upload to S3: {s3_key}")
+    os.remove(local_path)
+    logger.info(f"Removed local file: {local_path}")
 except Exception as e:
     logger.error(f"Failed to upload to S3: {e}")
