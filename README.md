@@ -38,7 +38,7 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
   - Structured logging, HTTP error handling, reusable S3 upload helper
 - [x] AWS S3 raw storage (date-partitioned Parquet)
 - [x] Snowflake warehouse setup (Storage Integration, External Stage, RAW tables loaded via `COPY INTO`)
-- [Doing] dbt transformations — Week 2
+- [x] dbt transformations — Week 2
   - Staging models for markets and price history complete
   - Staging model for coin metadata in progress
   - Marts layer, tests and documentation not started yet
