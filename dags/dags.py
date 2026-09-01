@@ -1,10 +1,16 @@
+import os
 from datetime import datetime, timedelta
-
 from docker.types import Mount
-
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
+aws_credentials = {
+    "AWS_ACCESS_KEY_ID": os.environ.get("AWS_ACCESS_KEY_ID"),
+    "AWS_SECRET_ACCESS_KEY": os.environ.get("AWS_SECRET_ACCESS_KEY"),
+    "AWS_REGION": os.environ.get("AWS_REGION"),
+    "S3_BUCKET_NAME": os.environ.get("S3_BUCKET_NAME")
+}
 
 with DAG(
     dag_id="crypto_pipeline",
@@ -17,6 +23,7 @@ with DAG(
 
     # --- Extração (DockerOperator, imagem crypto-extract) ---
     extract_markets_task = DockerOperator(
+        environment=aws_credentials,
         task_id="extract_markets",
         image="crypto-extract:latest",
         command="extract_markets.py",
@@ -28,6 +35,7 @@ with DAG(
     )
 
     extract_coin_info_task = DockerOperator(
+        environment=aws_credentials,
         task_id="extract_coin_info",
         image="crypto-extract:latest",
         command="extract_coin_info.py",
@@ -39,6 +47,7 @@ with DAG(
     )
 
     extract_price_history_task = DockerOperator(
+        environment=aws_credentials,
         task_id="extract_price_history",
         image="crypto-extract:latest",
         command="extract_price_history.py",
@@ -77,7 +86,7 @@ with DAG(
     # --- Transformações dbt (DockerOperator, imagem crypto-dbt) ---
     # Mount do profiles.yml: empresta ~/.dbt (do host) para /root/.dbt (dentro do container)
     dbt_profiles_mount = Mount(
-        source="/home/airflow/.dbt",
+        source=os.environ.get("DBT_PROFILES_DIR"),
         target="/root/.dbt",
         type="bind",
     )
