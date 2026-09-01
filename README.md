@@ -6,8 +6,6 @@ An end-to-end data engineering pipeline that extracts cryptocurrency market data
 ## 🏗️ Architecture
 CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAGING → MARTS) → dbt → Airflow → Streamlit/Metabase
 
-*(Diagram to be added in `/docs`)*
-
 ## 🛠️ Tech Stack
 - **Extraction:** Python (`requests`, `pydantic`, `python-dotenv`, `boto3`, `pandas`, `pyarrow`)
 - **Raw Storage:** AWS S3 (date-partitioned, Parquet format)
