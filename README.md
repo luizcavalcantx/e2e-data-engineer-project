@@ -8,16 +8,17 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 
 ## 🛠️ Tech Stack
 - **Extraction:** Python (`requests`, `pydantic`, `python-dotenv`, `boto3`, `pandas`, `pyarrow`)
+- **Testing:** `pytest`, `pytest-mock` — unit tests for all extraction scripts (fetch, validation, transformation, Parquet save, S3 key generation), with external calls (`requests`, `boto3`, `time.sleep`) mocked
 - **Raw Storage:** AWS S3 (date-partitioned, Parquet format)
 - **Data Warehouse:** Snowflake — `CRYPTO_PIPELINE` database, `RAW` / `STAGING` / `MARTS` schemas, `CRYPTO_PIPELINE_WH` (X-Small, aggressive auto-suspend) warehouse, Storage Integration + External Stage + `COPY INTO`
 - **Transformation:** dbt (project: `crypto_pipeline`) — staging & marts layers, tests, documentation, `dbt-labs/dbt_utils`
 - **Orchestration:** Apache Airflow 3.3.1 (Docker Compose, `LocalExecutor`), `DockerOperator`-based task execution
-- **CI/CD:** GitHub Actions
+- **CI/CD:** GitHub Actions — lint, pytest and `dbt build` on every push/PR (in progress)
 - **Consumption Layer:** Streamlit / Metabase (TBD)
-- **Supporting Tools:** Docker (dedicated Dockerfiles per component), pytest, structured logging, secrets management (`.env`, Docker Compose env substitution)
+- **Supporting Tools:** Docker (dedicated Dockerfiles per component), structured logging, secrets management (`.env`, Docker Compose env substitution)
 
 ## 📁 Project Structure
-├── extract/ # API extraction scripts (Pydantic models, S3 upload, Dockerfile)
+├── extract/ # API extraction scripts (Pydantic models, S3 upload, Dockerfile, pytest suite)
 
 ├── dags/ # Airflow DAGs
 
@@ -34,6 +35,7 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 - [x] Data extraction (CoinGecko API, 3 endpoints, 5 coins) — Week 1
   - Pydantic-validated extraction scripts for markets, coin metadata and price history
   - Structured logging, HTTP error handling, reusable S3 upload helper
+  - All extraction scripts refactored into pure, testable functions (`fetch`, `validate_and_transform`, `save_to_parquet`, `build_s3_key`, `run`)
 - [x] AWS S3 raw storage (date-partitioned Parquet)
 - [x] Snowflake warehouse setup (Storage Integration, External Stage, RAW tables loaded via `COPY INTO`)
 - [x] dbt transformations — Week 2
@@ -45,8 +47,26 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
   - Airflow stack (Postgres, webserver, scheduler) running via Docker Compose
   - Airflow connections (AWS, Snowflake) configured
   - Pipeline DAG (`dags/dag.py`) implemented with `DockerOperator` tasks
-- [Doing] CI/CD (GitHub Actions)
+- [Doing] CI/CD (GitHub Actions) — Week 4
+  - [x] Unit test suite (`pytest` + `pytest-mock`) covering all three extraction scripts and the S3 upload helper
+  - [ ] Lint step (ruff) in CI
+  - [ ] `pytest` step in CI
+  - [ ] `dbt build` step in CI
 - [ ] Consumption layer & polish — Week 4
+
+## 🧪 Testing
+The `extract/` module has a full unit test suite under `extract/tests/`:
+
+- `test_extract_markets.py`, `test_extract_coin_info.py`, `test_extract_price_history.py` — cover API fetching, Pydantic validation (valid and malformed data), DataFrame transformation, local Parquet save, and S3 key generation for each extraction script
+- `test_upload_s3.py` — verifies the S3 upload helper calls `boto3` with the correct parameters
+- `conftest.py` — shared fixtures with sample CoinGecko API responses for each of the three endpoints
+- All external I/O (`requests.get`, `boto3` client, `time.sleep`) is mocked, so the suite runs fast and without hitting the real API, AWS, or the rate-limit delays
+
+Run locally from `extract/` (with the extraction venv active):
+```bash
+pip install pytest pytest-mock
+pytest -v
+```
 
 ## ⚙️ How to Run
 
@@ -85,6 +105,7 @@ _AIRFLOW_WWW_USER_PASSWORD=admin
 cd extract
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+pip install pytest pytest-mock  # dev/test dependencies
 
 # dbt
 cd ../crypto_pipeline
