@@ -19,38 +19,47 @@ params = {
     "sparkline": False
 }
 
-logger.info("Starting extraction")
+def fetch_market_data():
+    """Call the coingecko markets endpoint and returns raw json data"""
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
+    return response.json()
 
-response = requests.get(url, params=params)
-response.raise_for_status()
-data = response.json()
+def validate_and_transform(raw_data):
+    """Validates raw API data against the Pydantic model and returns a DataFrame."""
+    coins = [CoinMarketData(**coin) for coin in raw_data]
+    dict_coins = [coin.model_dump() for coin in coins]
+    return pd.DataFrame(dict_coins)
 
-coins_list = []
-for coin_data in data:
-    coin = CoinMarketData(**coin_data)
-    coins_list.append(coin)
+def save_to_parquet(df,today):
+    """Saves the DataFrame locally as Parquet and returns the local path"""
+    os.makedirs("tmp", exist_ok=True)
+    local_path = f"tmp/coins_parquet_{today}.parquet"
+    df.to_parquet(local_path, index=False)
+    return local_path
 
-## Transforming into a dictionay list again
-# or: dict_coin = [coin.model() for coin in coins_list]
-dict_coins = []
-for coin_dict in coins_list:
-    x = coin_dict.model_dump()
-    dict_coins.append(x)
+def build_s3_key(today):
+    return f"raw/coins_markets/dt={today}/coins_parquet_{today}.parquet"
 
-df = pd.DataFrame(dict_coins)
-logger.info(f"Sucessfully fetched data for {len(data)} coins")
+def run():
+    logger.info("Starting extraction")
 
-os.makedirs("tmp", exist_ok=True)
+    raw_data = fetch_market_data()
+    df = validate_and_transform(raw_data)
+    logger.info(f"Successfully fetched data for {len(df)} coins")
 
-local_path = f"tmp/coins_parquet_{date.today()}.parquet"
-df.to_parquet(local_path, index=False)
+    today = date.today()
+    local_path = save_to_parquet(df, today)
+    s3_key = build_s3_key(today)
 
-s3_key = f"raw/coins_markets/dt={date.today()}/coins_parquet_{date.today()}.parquet"
+    try:
+        upload_to_s3(local_path, s3_key)
+        logger.info(f"Successfully upload to S3: {s3_key}")
+        os.remove(local_path)
+        logger.info(f"Removed local file: {local_path}")
+    except Exception as e:
+        logger.error(f"Failed to upload to S3: {e}")
+        raise
 
-try:
-    upload_to_s3(local_path, s3_key)
-    logger.info(f"Successfully upload to S3: {s3_key}")
-    os.remove(local_path)
-    logger.info(f"Removed local file: {local_path}")
-except Exception as e:
-    logger.error(f"Failed to upload to S3: {e}")
+if __name__ == "__main__":
+    run()
