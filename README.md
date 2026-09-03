@@ -13,7 +13,7 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 - **Data Warehouse:** Snowflake — `CRYPTO_PIPELINE` database, `RAW` / `STAGING` / `MARTS` schemas, `CRYPTO_PIPELINE_WH` (X-Small, aggressive auto-suspend) warehouse, Storage Integration + External Stage + `COPY INTO`
 - **Transformation:** dbt (project: `crypto_pipeline`) — staging & marts layers, tests, documentation, `dbt-labs/dbt_utils`
 - **Orchestration:** Apache Airflow 3.3.1 (Docker Compose, `LocalExecutor`), `DockerOperator`-based task execution
-- **CI/CD:** GitHub Actions — lint, pytest and `dbt build` on every push/PR (in progress)
+- **CI/CD:** GitHub Actions — lint (`ruff`), `pytest` and `dbt build` running on every push/PR
 - **Consumption Layer:** Streamlit / Metabase (TBD)
 - **Supporting Tools:** Docker (dedicated Dockerfiles per component), structured logging, secrets management (`.env`, Docker Compose env substitution)
 
@@ -24,7 +24,7 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 
 ├── crypto_pipeline/ # dbt project (staging + marts models, Dockerfile)
 
-├── .github/workflows/ # CI/CD pipelines
+├── .github/workflows/ # CI/CD pipelines (lint, pytest, dbt build)
 
 ├── docs/ # Documentation, diagrams, snowflake_setup.sql
 
@@ -47,12 +47,11 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
   - Airflow stack (Postgres, webserver, scheduler) running via Docker Compose
   - Airflow connections (AWS, Snowflake) configured
   - Pipeline DAG (`dags/dag.py`) implemented with `DockerOperator` tasks
-- [Doing] CI/CD (GitHub Actions) — Week 4
-  - [x] Unit test suite (`pytest` + `pytest-mock`) covering all three extraction scripts and the S3 upload helper
-  - [ ] Lint step (ruff) in CI
-  - [ ] `pytest` step in CI
-  - [ ] `dbt build` step in CI
-- [ ] Consumption layer & polish — Week 4
+- [x] CI/CD (GitHub Actions) — Week 4
+  - Unit test suite (`pytest` + `pytest-mock`) covering all three extraction scripts and the S3 upload helper
+  - Lint step (`ruff`) running in CI
+  - `pytest` step running in CI
+  - `dbt build` step running in CI
 
 ## 🧪 Testing
 The `extract/` module has a full unit test suite under `extract/tests/`:
@@ -67,6 +66,15 @@ Run locally from `extract/` (with the extraction venv active):
 pip install pytest pytest-mock
 pytest -v
 ```
+
+## 🔄 CI/CD
+Every push and pull request runs a GitHub Actions workflow (`.github/workflows/`) with three stages:
+
+1. **Lint** — `ruff` checks the codebase for style and correctness issues.
+2. **Test** — the `pytest` suite runs against the `extract/` module, with all external calls mocked.
+3. **dbt build** — the `crypto_pipeline` dbt project is compiled and run against Snowflake to catch modeling or dependency errors before merge.
+
+A failure in any stage blocks the workflow, so broken code or models don't reach `main`.
 
 ## ⚙️ How to Run
 
