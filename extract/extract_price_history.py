@@ -1,12 +1,13 @@
 import os
-import requests
-import json
 import time
-from models import PriceHistoryData
-import pandas as pd
 from datetime import date
-from upload_s3 import upload_to_s3
+
+import pandas as pd
+import requests
+
 from logger_config import setup_logger
+from models import PriceHistoryData
+from upload_s3 import upload_to_s3
 
 logger = setup_logger("extract_price_history")
 

@@ -1,0 +1,15 @@
+[tool.ruff]
+# Match the extraction scripts' target Python version
+target-version = "py311"
+line-length = 100
+ 
+[tool.ruff.lint]
+# E, F = pycodestyle errors + pyflakes (unused imports, undefined names, etc.)
+# I = isort (import sorting)
+# UP = pyupgrade (modern Python syntax)
+select = ["E", "F", "I", "UP"]
+ignore = []
+ 
+[tool.ruff.lint.per-file-ignores]
+# Test files commonly have unused imports from fixtures/mocking patterns
+"tests/*" = ["F401"]

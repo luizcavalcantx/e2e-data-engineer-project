@@ -1,11 +1,12 @@
 import os
-import requests
-import json
-from models import CoinMarketData
-import pandas as pd
 from datetime import date
-from upload_s3 import upload_to_s3
+
+import pandas as pd
+import requests
+
 from logger_config import setup_logger
+from models import CoinMarketData
+from upload_s3 import upload_to_s3
 
 logger = setup_logger("extract_markets")
 

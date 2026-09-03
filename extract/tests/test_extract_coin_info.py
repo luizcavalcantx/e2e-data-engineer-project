@@ -1,14 +1,15 @@
-import requests
-import pytest
 from datetime import date
+
+import pytest
+import requests
 from pydantic import ValidationError
 
 from extract_coin_info import (
-    fetch_coin_info,
-    validate_and_transform,
-    save_to_parquet,
     build_s3_key,
     coin_ids,
+    fetch_coin_info,
+    save_to_parquet,
+    validate_and_transform,
 )
 
 

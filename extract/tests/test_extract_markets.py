@@ -1,13 +1,14 @@
-import requests
-import pytest
 from datetime import date
+
+import pytest
+import requests
 from pydantic import ValidationError
 
 from extract_markets import (
-    fetch_market_data,
-    validate_and_transform,
-    save_to_parquet,
     build_s3_key,
+    fetch_market_data,
+    save_to_parquet,
+    validate_and_transform,
 )
 
 

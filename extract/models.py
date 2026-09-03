@@ -1,6 +1,6 @@
-from pydantic import BaseModel, field_validator
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel
 
 
 class ROI(BaseModel):
@@ -17,55 +17,55 @@ class CoinMarketData(BaseModel):
 
     current_price: float
     market_cap: float
-    market_cap_rank: Optional[int] = None
-    fully_diluted_valuation: Optional[float] = None
+    market_cap_rank: int | None = None
+    fully_diluted_valuation: float | None = None
     total_volume: float
 
-    high_24h: Optional[float] = None
-    low_24h: Optional[float] = None
-    price_change_24h: Optional[float] = None
-    price_change_percentage_24h: Optional[float] = None
-    market_cap_change_24h: Optional[float] = None
-    market_cap_change_percentage_24h: Optional[float] = None
+    high_24h: float | None = None
+    low_24h: float | None = None
+    price_change_24h: float | None = None
+    price_change_percentage_24h: float | None = None
+    market_cap_change_24h: float | None = None
+    market_cap_change_percentage_24h: float | None = None
 
-    circulating_supply: Optional[float] = None
-    total_supply: Optional[float] = None
-    max_supply: Optional[float] = None
+    circulating_supply: float | None = None
+    total_supply: float | None = None
+    max_supply: float | None = None
 
-    ath: Optional[float] = None
-    ath_change_percentage: Optional[float] = None
-    ath_date: Optional[datetime] = None
+    ath: float | None = None
+    ath_change_percentage: float | None = None
+    ath_date: datetime | None = None
 
-    atl: Optional[float] = None
-    atl_change_percentage: Optional[float] = None
-    atl_date: Optional[datetime] = None
+    atl: float | None = None
+    atl_change_percentage: float | None = None
+    atl_date: datetime | None = None
 
-    roi: Optional[ROI] = None
-    last_updated: Optional[datetime] = None
+    roi: ROI | None = None
+    last_updated: datetime | None = None
 
 class CoinLinks(BaseModel):
     homepage: list[str]
     blockchain_site: list[str]
     official_forum_url: list[str]
-    subreddit_url: Optional[str] = None
+    subreddit_url: str | None = None
 
 
 class CoinImage(BaseModel):
-    thumb: Optional[str] = None
-    small: Optional[str] = None
-    large: Optional[str] = None
+    thumb: str | None = None
+    small: str | None = None
+    large: str | None = None
 
 
 class CoinInfoData(BaseModel):
     id: str
     symbol: str
     name: str
-    categories: list[Optional[str]] = []
+    categories: list[str | None] = []
     links: CoinLinks
     image: CoinImage
-    country_origin: Optional[str] = None
-    genesis_date: Optional[str] = None
-    market_cap_rank: Optional[int] = None
+    country_origin: str | None = None
+    genesis_date: str | None = None
+    market_cap_rank: int | None = None
 
 class PriceHistoryData(BaseModel):
     prices: list[list[float]]

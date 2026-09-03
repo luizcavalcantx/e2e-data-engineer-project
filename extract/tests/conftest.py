@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 import pytest
 
 # Adds the extract/ folder (one level up from tests/) to sys.path so that

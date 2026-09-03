@@ -1,14 +1,15 @@
-import requests
-import pytest
 from datetime import date
+
+import pytest
+import requests
 from pydantic import ValidationError
 
 from extract_price_history import (
-    fetch_price_history,
-    validate_and_transform,
-    save_to_parquet,
     build_s3_key,
     coin_ids,
+    fetch_price_history,
+    save_to_parquet,
+    validate_and_transform,
 )
 
 
