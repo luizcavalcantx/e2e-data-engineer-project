@@ -2,7 +2,7 @@ with source as (
     select * from {{ source('raw', 'price_history') }}
 ),
 
-final as (
+flattened as (
     select distinct
         coin_id,
         TO_TIMESTAMP_NTZ(f.value[0]::NUMBER, 3) as date_timestamp,
@@ -12,6 +12,12 @@ final as (
         current_timestamp() as loaded_at
     from source,
     lateral flatten(input => prices) f
+),
+
+final as (
+    select *
+    from flattened
+    qualify row_number() over (partition by coin_id,date_timestamp order by loaded_at desc) = 1
 )
 
 select *
