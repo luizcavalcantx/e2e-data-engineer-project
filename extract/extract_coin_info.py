@@ -55,7 +55,7 @@ def save_to_parquet(df, today):
     return local_path
 
 def build_s3_key(today):
-    return f"raw/coins_info/dt={today()}/coins_info_{today()}.parquet"
+    return f"raw/coins_info/dt={today}/coins_info_{today}.parquet"
 
 def run():
     logger.info("Starting extraction")
