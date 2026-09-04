@@ -17,6 +17,42 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 - **Consumption Layer:** Streamlit / Metabase (TBD)
 - **Supporting Tools:** Docker (dedicated Dockerfiles per component), structured logging, secrets management (`.env`, Docker Compose env substitution)
 
+## 🔄 Data Pipeline
+
+### Raw Layer (S3)
+- **Frequency:** Daily
+- **Source:** CoinGecko API (`/coins/markets`, `/coins/{id}`, `/coins/{id}/market_chart`)
+- **Storage:** S3, Parquet format, partitioned by date (`dt=YYYY-MM-DD/`)
+
+### RAW Layer (Snowflake)
+- **Source:** S3, via Storage Integration + External Stage
+- **Process:** `COPY INTO` raw tables
+- **Schema:** `RAW`
+
+### STAGING Layer (dbt)
+- **Process:** dbt staging models — data cleaning, type casting, validation
+- **Status:** markets and price_history models complete; coin metadata model in progress
+- **Schema:** `STAGING`
+
+### MARTS Layer (dbt)
+- **Process:** business logic and analytics-ready models
+- **Status:** not started yet
+- **Schema:** `MARTS`
+
+## 📊 Current Capacity
+
+> Note: these numbers reflect the current development environment, where the pipeline has been run periodically during testing rather than on a continuous production schedule.
+
+| Metric | Value |
+|---|---|
+| Cryptocurrencies tracked | 5 (bitcoin, ethereum, tether, solana, cardano) |
+| API endpoints | 3 (coins/markets, coin_info, price_history) |
+| Total objects in S3 | 10 |
+| Total storage | ~306 KB (Parquet, compressed) |
+| Storage per endpoint | coins_markets: ~53 KB · coins_info: ~42 KB · price_history: ~211 KB |
+| Partitioning | Date-based (`dt=YYYY-MM-DD/`) per endpoint |
+| File format | Apache Parquet (columnar, schema-preserving) |
+
 ## 📁 Project Structure
 ├── extract/ # API extraction scripts (Pydantic models, S3 upload, Dockerfile, pytest suite)
 
