@@ -12,6 +12,8 @@ aws_credentials = {
     "S3_BUCKET_NAME": os.environ.get("S3_BUCKET_NAME")
 }
 
+extract_env = {**aws_credentials, "COINGECKO_KEY": os.environ["COINGECKO_KEY"]}
+
 with DAG(
     dag_id="crypto_pipeline",
     description="Extrai dados da CoinGecko, carrega no Snowflake e roda transformações dbt",
@@ -23,7 +25,7 @@ with DAG(
 
     # --- Extração (DockerOperator, imagem crypto-extract) ---
     extract_markets_task = DockerOperator(
-        environment=aws_credentials,
+        environment=extract_env,
         task_id="extract_markets",
         image="crypto-extract:latest",
         command="extract_markets.py",
@@ -35,7 +37,7 @@ with DAG(
     )
 
     extract_coin_info_task = DockerOperator(
-        environment=aws_credentials,
+        environment=extract_env,
         task_id="extract_coin_info",
         image="crypto-extract:latest",
         command="extract_coin_info.py",
@@ -47,7 +49,7 @@ with DAG(
     )
 
     extract_price_history_task = DockerOperator(
-        environment=aws_credentials,
+        environment=extract_env,
         task_id="extract_price_history",
         image="crypto-extract:latest",
         command="extract_price_history.py",
@@ -104,4 +106,4 @@ with DAG(
     # --- Ordem de execução ---
     # As 3 extrações rodam em paralelo; só depois que as 3 terminarem,
     # a carga no Snowflake roda; e só depois dela, o dbt roda.
-    extract_markets_task >> extract_coin_info_task >> extract_price_history_task >> load_to_snowflake_task >> run_dbt_task
+    [extract_markets_task, extract_coin_info_task, extract_price_history_task] >> load_to_snowflake_task >> run_dbt_task
