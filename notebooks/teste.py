@@ -1,7 +1,7 @@
+from datetime import datetime, timezone
+
 import requests
-import boto3
-from botocore.exceptions import ClientError
-from datetime import datetime
+
 
 class CryptoDataCollector:
     def __init__(self, url, token):
@@ -87,7 +87,7 @@ class CryptoDataCollector:
     def _add_collection_metadata(self, filtered_data):
         return {
             'collection_metadata': {
-                'timestamp': datetime.now().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'source': 'coingecko_api',
                 'coins_collected': len(filtered_data),
                 'target_coins': self.target_coins

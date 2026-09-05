@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import date
 
 import pandas as pd
@@ -33,7 +32,6 @@ def fetch_coin_info():
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         raw_data.append(response.json())
-        # time.sleep(6)  # respect the free coingecko API rate limit
     return raw_data
 
 def validate_and_transform(data):
@@ -62,7 +60,6 @@ def build_s3_key(today):
 
 def run():
     logger.info("Starting extraction")
-    # time.sleep(30)
 
     raw_data = fetch_coin_info()
     df = validate_and_transform(raw_data)

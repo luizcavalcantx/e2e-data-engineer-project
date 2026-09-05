@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import date
 
 import pandas as pd
@@ -8,7 +7,6 @@ import requests
 from logger_config import setup_logger
 from models import PriceHistoryData
 from upload_s3 import upload_to_s3
-from dotenv import load_dotenv
 
 api_key = os.environ["COINGECKO_KEY"]
 
@@ -31,7 +29,6 @@ def fetch_price_history():
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         raw_data.append((coin_id, response.json()))
-        # time.sleep(6)  # respect the free coingecko API rate limit
     return raw_data
 
 def validate_and_transform(data):
@@ -61,7 +58,6 @@ def build_s3_key(today):
 
 def run():
     logger.info("Starting extraction")
-    # time.sleep(30)
 
     raw_data = fetch_price_history()
     df = validate_and_transform(raw_data)

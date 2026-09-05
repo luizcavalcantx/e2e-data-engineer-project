@@ -1,9 +1,10 @@
 import os
-from datetime import datetime, timedelta
-from docker.types import Mount
+from datetime import datetime, timedelta, timezone
+
 from airflow import DAG
-from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.providers.docker.operators.docker import DockerOperator
+from docker.types import Mount
 
 aws_credentials = {
     "AWS_ACCESS_KEY_ID": os.environ.get("AWS_ACCESS_KEY_ID"),
@@ -17,7 +18,7 @@ extract_env = {**aws_credentials, "COINGECKO_KEY": os.environ["COINGECKO_KEY"]}
 with DAG(
     dag_id="crypto_pipeline",
     description="Extrai dados da CoinGecko, carrega no Snowflake e roda transformações dbt",
-    start_date=datetime(2026, 8, 27),
+    start_date=datetime(2026, 8, 27, tzinfo=timezone.utc),
     schedule="@daily",
     catchup=True,
     tags=["crypto", "portfolio"],
