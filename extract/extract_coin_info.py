@@ -9,10 +9,13 @@ from logger_config import setup_logger
 from models import CoinInfoData
 from upload_s3 import upload_to_s3
 
+api_key = os.environ["COINGECKO_KEY"]
+
 logger = setup_logger("extract_coin_info")
 
 coin_ids = ["bitcoin", "ethereum", "tether", "solana", "cardano"]
 base_url = "https://api.coingecko.com/api/v3/coins/{id}"
+headers = {"x-cg-demo-api-key": api_key}
 params = {
     "localization": False,
     "tickers": False,
@@ -27,10 +30,10 @@ def fetch_coin_info():
     raw_data = []
     for coin_id in coin_ids:
         url = base_url.format(id=coin_id)
-        response = requests.get(url, params=params)
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         raw_data.append(response.json())
-        time.sleep(6)  # respect the free coingecko API rate limit
+        # time.sleep(6)  # respect the free coingecko API rate limit
     return raw_data
 
 def validate_and_transform(data):
@@ -59,7 +62,7 @@ def build_s3_key(today):
 
 def run():
     logger.info("Starting extraction")
-    time.sleep(30)
+    # time.sleep(30)
 
     raw_data = fetch_coin_info()
     df = validate_and_transform(raw_data)

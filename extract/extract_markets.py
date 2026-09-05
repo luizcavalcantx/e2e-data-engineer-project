@@ -8,9 +8,12 @@ from logger_config import setup_logger
 from models import CoinMarketData
 from upload_s3 import upload_to_s3
 
+api_key = os.environ["COINGECKO_KEY"]
+
 logger = setup_logger("extract_markets")
 
 url = "https://api.coingecko.com/api/v3/coins/markets"
+headers = {"x-cg-demo-api-key": api_key}
 params = {
     "vs_currency": "usd",
     "ids": "bitcoin,ethereum,tether,solana,cardano",
@@ -22,7 +25,7 @@ params = {
 
 def fetch_market_data():
     """Call the coingecko markets endpoint and returns raw json data"""
-    response = requests.get(url, params=params, timeout=30)
+    response = requests.get(url, headers=headers ,params=params, timeout=30)
     response.raise_for_status()
     return response.json()
 
