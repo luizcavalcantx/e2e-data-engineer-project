@@ -8,7 +8,7 @@ from logger_config import setup_logger
 from models import CoinMarketData
 from upload_s3 import upload_to_s3
 
-api_key = os.environ["COINGECKO_KEY"]
+api_key = os.environ.get("COINGECKO_KEY", "")
 
 logger = setup_logger("extract_markets")
 

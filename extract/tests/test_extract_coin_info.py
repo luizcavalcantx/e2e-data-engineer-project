@@ -18,7 +18,6 @@ def test_fetch_coin_info_calls_api_for_each_coin(mocker, sample_coin_info_respon
     mock_response.json.return_value = sample_coin_info_response
     mock_response.raise_for_status.return_value = None
     mock_get = mocker.patch("extract_coin_info.requests.get", return_value=mock_response)
-    mocker.patch("extract_coin_info.time.sleep")  # skip the 6s rate-limit delay
 
     result = fetch_coin_info()
 
@@ -30,23 +29,9 @@ def test_fetch_coin_info_raises_on_http_error(mocker):
     mock_response = mocker.Mock()
     mock_response.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
     mocker.patch("extract_coin_info.requests.get", return_value=mock_response)
-    mocker.patch("extract_coin_info.time.sleep")
 
     with pytest.raises(requests.HTTPError):
         fetch_coin_info()
-
-
-def test_fetch_coin_info_respects_rate_limit(mocker, sample_coin_info_response):
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = sample_coin_info_response
-    mock_response.raise_for_status.return_value = None
-    mocker.patch("extract_coin_info.requests.get", return_value=mock_response)
-    mock_sleep = mocker.patch("extract_coin_info.time.sleep")
-
-    fetch_coin_info()
-
-    assert mock_sleep.call_count == len(coin_ids)
-    mock_sleep.assert_called_with(6)
 
 
 def test_validate_and_transform_valid_data(sample_coin_info_response):

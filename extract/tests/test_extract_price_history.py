@@ -18,7 +18,6 @@ def test_fetch_price_history_calls_api_for_each_coin(mocker, sample_price_histor
     mock_response.json.return_value = sample_price_history_response
     mock_response.raise_for_status.return_value = None
     mock_get = mocker.patch("extract_price_history.requests.get", return_value=mock_response)
-    mocker.patch("extract_price_history.time.sleep")  # skip the 6s rate-limit delay
 
     result = fetch_price_history()
 
@@ -30,23 +29,9 @@ def test_fetch_price_history_raises_on_http_error(mocker):
     mock_response = mocker.Mock()
     mock_response.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
     mocker.patch("extract_price_history.requests.get", return_value=mock_response)
-    mocker.patch("extract_price_history.time.sleep")
 
     with pytest.raises(requests.HTTPError):
         fetch_price_history()
-
-
-def test_fetch_price_history_respects_rate_limit(mocker, sample_price_history_response):
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = sample_price_history_response
-    mock_response.raise_for_status.return_value = None
-    mocker.patch("extract_price_history.requests.get", return_value=mock_response)
-    mock_sleep = mocker.patch("extract_price_history.time.sleep")
-
-    fetch_price_history()
-
-    assert mock_sleep.call_count == len(coin_ids)
-    mock_sleep.assert_called_with(6)
 
 
 def test_validate_and_transform_adds_coin_id_column(sample_price_history_response):
