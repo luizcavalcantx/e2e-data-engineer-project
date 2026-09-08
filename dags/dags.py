@@ -33,6 +33,7 @@ with DAG(
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
+        auto_remove="success",
         retries=3,
         retry_delay=timedelta(seconds=10),
     )
@@ -45,6 +46,7 @@ with DAG(
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
+        auto_remove="success",
         retries=3,
         retry_delay=timedelta(seconds=20),
     )
@@ -57,6 +59,7 @@ with DAG(
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
+        auto_remove="success",
         retries=3,
         retry_delay=timedelta(seconds=30),
     )
@@ -102,6 +105,7 @@ with DAG(
         network_mode="bridge",
         mounts=[dbt_profiles_mount],
         mount_tmp_dir=False,
+        auto_remove="success",
     )
 
     # --- Ordem de execução ---

@@ -65,6 +65,8 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 
 ├── notebooks/ # Exploratory notebooks / API studies (not part of the pipeline)
 
+├── scripts/ # Helper scripts (build-images.sh / .ps1 — rebuild + prune dangling images)
+
 ├── .github/workflows/ # CI/CD pipelines (lint, pytest, dbt build)
 
 ├── docs/ # Documentation, diagrams, snowflake_setup.sql / grants_setup.sql / create_airflow.sql
@@ -196,9 +198,16 @@ crypto_pipeline:
 
 ### 5. Build the pipeline images
 ```bash
+# via script (recommended — also prunes the dangling <none> images left by the rebuild)
+./scripts/build-images.sh          # Windows: pwsh ./scripts/build-images.ps1
+
+# or manually
 docker build -t crypto-extract:latest ./extract
 docker build -t crypto-dbt:latest ./crypto_pipeline
+docker image prune -f              # drops the previous :latest image (now <none>)
 ```
+> `docker image prune -f` removes **all** dangling images on the host, not just this
+> project's (dangling = untagged, generally safe to delete).
 
 ### 6. Start the Airflow stack
 ```bash
@@ -226,6 +235,11 @@ docker compose exec airflow-scheduler airflow dags trigger crypto_pipeline
 docker compose down -v
 ```
 Use `-v` when you need a clean slate (e.g., after changing `.env` values used at `airflow-init` time).
+
+> **Docker housekeeping:** the `DockerOperator` tasks run with `auto_remove="success"`, so
+> containers from successful task runs are deleted automatically. Containers from **failed**
+> tasks are kept for inspection — clear them with `docker container prune -f` once you're done
+> debugging.
 
 ## 📊 Data Source
 [CoinGecko API](https://www.coingecko.com/en/api) (free "Demo" plan — a personal API key is sent via the `x-cg-demo-api-key` header to lift the anonymous rate limit)
