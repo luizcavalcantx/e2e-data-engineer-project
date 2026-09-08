@@ -7,8 +7,8 @@ An end-to-end data engineering pipeline that extracts cryptocurrency market data
 CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAGING → MARTS) → dbt → Airflow → Streamlit/Metabase
 
 ## 🛠️ Tech Stack
-- **Extraction:** Python (`requests`, `pydantic`, `python-dotenv`, `boto3`, `pandas`, `pyarrow`)
-- **Testing:** `pytest`, `pytest-mock` — unit tests for all extraction scripts (fetch, validation, transformation, Parquet save, S3 key generation), with external calls (`requests`, `boto3`, `time.sleep`) mocked
+- **Extraction:** Python (`requests`, `pydantic`, `python-dotenv`, `boto3`, `pandas`, `pyarrow`) — CoinGecko demo API key sent via the `x-cg-demo-api-key` header (`COINGECKO_KEY`) to raise the rate limit and drop `time.sleep` throttling
+- **Testing:** `pytest`, `pytest-mock` — unit tests for all extraction scripts (fetch, validation, transformation, Parquet save, S3 key generation), with external calls (`requests`, `boto3`) mocked
 - **Raw Storage:** AWS S3 (date-partitioned, Parquet format)
 - **Data Warehouse:** Snowflake — `CRYPTO_PIPELINE` database, `RAW` / `STAGING` / `MARTS` schemas, `CRYPTO_PIPELINE_WH` (X-Small, aggressive auto-suspend) warehouse, Storage Integration + External Stage + `COPY INTO`
 - **Transformation:** dbt (project: `crypto_pipeline`) — staging & marts layers, tests, documentation, `dbt-labs/dbt_utils`
@@ -16,6 +16,7 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 - **CI/CD:** GitHub Actions — lint (`ruff`), `pytest` and `dbt build` running on every push/PR
 - **Consumption Layer:** Streamlit / Metabase (TBD)
 - **Supporting Tools:** Docker (dedicated Dockerfiles per component), structured logging, secrets management (`.env`, Docker Compose env substitution)
+- **Python environments:** two isolated virtualenvs, one per deployable component — `extract/.venv` (extraction + tests, mirrors `crypto-extract:latest`) and `crypto_pipeline/.venv` (dbt, mirrors `crypto-dbt:latest`). They are kept separate on purpose: dbt's dependency tree (`dbt-core`, `dbt-snowflake`, `metricflow`, pinned `Jinja2`/`protobuf`/`click`) is large and would bloat or conflict with the lean extraction runtime. Each `.venv` sits next to the `requirements.txt` and `Dockerfile` it matches, and next to the CI `working-directory`.
 
 ## 🔄 Data Pipeline
 
@@ -31,12 +32,14 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 
 ### STAGING Layer (dbt)
 - **Process:** dbt staging models — data cleaning, type casting, validation
-- **Status:** markets and price_history models complete; coin metadata model in progress
+- **Models:** `stg_coins_markets`, `stg_coin_info`, `stg_price_history`
+- **Status:** complete
 - **Schema:** `STAGING`
 
 ### MARTS Layer (dbt)
 - **Process:** business logic and analytics-ready models
-- **Status:** not started yet
+- **Models:** `dim_coin_info` (coin dimension), `fct_daily_market_snapshot` (daily market state per coin), `fct_price_history` (historical daily prices)
+- **Status:** models, descriptions and tests in place (`not_null` / `unique` keys, `dbt_utils.unique_combination_of_columns`)
 - **Schema:** `MARTS`
 
 ## 📊 Current Capacity
@@ -54,17 +57,19 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 | File format | Apache Parquet (columnar, schema-preserving) |
 
 ## 📁 Project Structure
-├── extract/ # API extraction scripts (Pydantic models, S3 upload, Dockerfile, pytest suite)
+├── extract/ # API extraction scripts (Pydantic models, S3 upload, Dockerfile, pytest suite, .venv)
 
-├── dags/ # Airflow DAGs
+├── dags/ # Airflow DAGs (dags.py — dag_id: crypto_pipeline)
 
-├── crypto_pipeline/ # dbt project (staging + marts models, Dockerfile)
+├── crypto_pipeline/ # dbt project (staging + marts models, Dockerfile, .venv)
+
+├── notebooks/ # Exploratory notebooks / API studies (not part of the pipeline)
 
 ├── .github/workflows/ # CI/CD pipelines (lint, pytest, dbt build)
 
-├── docs/ # Documentation, diagrams, snowflake_setup.sql
+├── docs/ # Documentation, diagrams, snowflake_setup.sql / grants_setup.sql / create_airflow.sql
 
-└── docker-compose.yml # Airflow stack (postgres, webserver, scheduler — local orchestration)
+└── docker-compose.yml # Airflow stack (postgres, webserver, scheduler, dag-processor — local orchestration)
 
 ## 🚀 Project Status
 - [x] Repository structure setup
@@ -75,14 +80,14 @@ CoinGecko API → S3 (raw, date-partitioned Parquet) → Snowflake (RAW → STAG
 - [x] AWS S3 raw storage (date-partitioned Parquet)
 - [x] Snowflake warehouse setup (Storage Integration, External Stage, RAW tables loaded via `COPY INTO`)
 - [x] dbt transformations — Week 2
-  - Staging models for markets and price history complete
-  - Staging model for coin metadata in progress
-  - Marts layer, tests and documentation not started yet
+  - Staging models complete for all three sources (`stg_coins_markets`, `stg_coin_info`, `stg_price_history`)
+  - Marts layer built: `dim_coin_info`, `fct_daily_market_snapshot`, `fct_price_history` — with column descriptions and schema tests
+  - `dbt-labs/dbt_utils` in use for cross-column uniqueness tests
 - [x] Containerization & orchestration — Week 3
   - Dockerfiles for extraction and dbt components built
-  - Airflow stack (Postgres, webserver, scheduler) running via Docker Compose
-  - Airflow connections (AWS, Snowflake) configured
-  - Pipeline DAG (`dags/dag.py`) implemented with `DockerOperator` tasks
+  - Airflow stack (Postgres, webserver, scheduler, dag-processor) running via Docker Compose
+  - Snowflake Airflow connection configured; AWS + CoinGecko creds passed to containers via env
+  - Pipeline DAG (`dags/dags.py`, `dag_id="crypto_pipeline"`) implemented with `DockerOperator` tasks — 3 extractions in parallel → `load_to_snowflake` → `run_dbt`
 - [x] CI/CD (GitHub Actions) — Week 4
   - Unit test suite (`pytest` + `pytest-mock`) covering all three extraction scripts and the S3 upload helper
   - Lint step (`ruff`) running in CI
@@ -94,17 +99,19 @@ The `extract/` module has a full unit test suite under `extract/tests/`:
 
 - `test_extract_markets.py`, `test_extract_coin_info.py`, `test_extract_price_history.py` — cover API fetching, Pydantic validation (valid and malformed data), DataFrame transformation, local Parquet save, and S3 key generation for each extraction script
 - `test_upload_s3.py` — verifies the S3 upload helper calls `boto3` with the correct parameters
-- `conftest.py` — shared fixtures with sample CoinGecko API responses for each of the three endpoints
-- All external I/O (`requests.get`, `boto3` client, `time.sleep`) is mocked, so the suite runs fast and without hitting the real API, AWS, or the rate-limit delays
+- `conftest.py` — adds `extract/` to `sys.path` and holds shared fixtures with sample CoinGecko API responses for each of the three endpoints
+- All external I/O (`requests.get`, `boto3` client) is mocked, so the suite runs fast and without hitting the real API or AWS
 
-Run locally from `extract/` (with the extraction venv active):
+Run locally from `extract/` (with `extract/.venv` active):
 ```bash
 pip install pytest pytest-mock
 pytest -v
 ```
 
+In CI the pytest step sets a dummy `COINGECKO_KEY` so the extraction modules import cleanly without a real key.
+
 ## 🔄 CI/CD
-Every push and pull request runs a GitHub Actions workflow (`.github/workflows/`) with three stages:
+Every push and pull request runs a GitHub Actions workflow (`.github/workflows/ci.yml`) with three stages:
 
 1. **Lint** — `ruff` checks the codebase for style and correctness issues.
 2. **Test** — the `pytest` suite runs against the `extract/` module, with all external calls mocked.
@@ -121,37 +128,49 @@ cd e2e-data-engineer-project/codeup_project
 ```
 
 ### 2. Configure environment variables
-Create a `.env` file in the project root with your AWS and Snowflake credentials:
+Create a `.env` file in the project root (it is git-ignored). Docker Compose substitutes these into the Airflow services, and the extraction containers receive the AWS + CoinGecko values through the DAG:
 ```env
-# AWS
+# AWS (S3 raw storage)
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_REGION=us-east-1
 S3_BUCKET_NAME=your-bucket-name
 
-# Snowflake
-SNOWFLAKE_ACCOUNT=your_account
-SNOWFLAKE_USER=your_user
-SNOWFLAKE_PASSWORD=your_password
-SNOWFLAKE_ROLE=your_role
-SNOWFLAKE_WAREHOUSE=your_warehouse
-SNOWFLAKE_DATABASE=your_database
+# CoinGecko (demo API key — sent as x-cg-demo-api-key header)
+COINGECKO_KEY=CG-xxxxxxxxxxxxxxxxxxxx
 
-# Airflow (used by docker-compose / airflow-init)
-AIRFLOW_UID=50000
-_AIRFLOW_WWW_USER_USERNAME=admin
-_AIRFLOW_WWW_USER_PASSWORD=admin
+# Airflow metadata DB (Postgres)
+POSTGRES_USER=airflow
+POSTGRES_PASSWORD=airflow
+POSTGRES_DB=airflow
+
+# Airflow admin user (created by airflow-init) + core secrets
+AIRFLOW_ADMIN_USER=admin
+AIRFLOW_ADMIN_PASSWORD=admin
+AIRFLOW_ADMIN_FIRSTNAME=Admin
+AIRFLOW_ADMIN_LASTNAME=User
+AIRFLOW_ADMIN_EMAIL=admin@example.com
+AIRFLOW_JWT_SECRET=generate_a_random_string
+AIRFLOW_FERNET_KEY=generate_with_python_cryptography_fernet
+
+# dbt profiles dir on the host (bind-mounted into the dbt container)
+DBT_PROFILES_DIR=/absolute/path/to/your/.dbt
+```
+Generate the Fernet key with:
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
 ### 3. Set up Python environments (for local development/testing)
+Two separate virtualenvs, one per component (see **Tech Stack → Python environments** for the rationale). Activate the one that matches the folder you're working in.
 ```bash
-# Extraction
+# Extraction  (extract/.venv  ->  crypto-extract image)
 cd extract
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 pip install pytest pytest-mock  # dev/test dependencies
 
-# dbt
+# dbt  (crypto_pipeline/.venv  ->  crypto-dbt image)
 cd ../crypto_pipeline
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
@@ -185,20 +204,21 @@ docker build -t crypto-dbt:latest ./crypto_pipeline
 ```bash
 docker compose up -d
 ```
-This starts Postgres (Airflow metadata DB), the webserver (`api-server`, port `8080`), and the scheduler. The scheduler bind-mounts `/var/run/docker.sock` so it can spawn the extraction and dbt containers via `DockerOperator`.
+This starts Postgres (Airflow metadata DB), the webserver (`api-server`, port `8080`), the scheduler and the dag-processor. The scheduler bind-mounts `/var/run/docker.sock` so it can spawn the extraction and dbt containers via `DockerOperator`, and `${DBT_PROFILES_DIR}` into `~/.dbt`.
 
 ### 7. Access the Airflow UI
-Go to `http://localhost:8080` and log in with the credentials set in `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`.
+Go to `http://localhost:8080` and log in with the credentials set in `AIRFLOW_ADMIN_USER` / `AIRFLOW_ADMIN_PASSWORD`.
 
 ### 8. Configure Airflow Connections
 In **Admin → Connections**, add:
-- `aws_default` — AWS credentials for S3 access
-- `snowflake_default` — Snowflake credentials for `COPY INTO` / `SnowflakeOperator` tasks
+- `snowflake_connection` — Snowflake credentials for the `load_to_snowflake` task (`COPY INTO` from the external stage)
+
+AWS and CoinGecko credentials are **not** Airflow connections — they are passed straight into the extraction containers as environment variables by the DAG (`extract_env` in `dags/dags.py`), sourced from the scheduler's environment.
 
 ### 9. Trigger the DAG
-Enable and trigger `crypto_pipeline_dag` from the UI, or:
+Enable and trigger `crypto_pipeline` from the UI, or:
 ```bash
-docker compose exec airflow-scheduler airflow dags trigger crypto_pipeline_dag
+docker compose exec airflow-scheduler airflow dags trigger crypto_pipeline
 ```
 
 ### 10. Tear down
@@ -208,7 +228,7 @@ docker compose down -v
 Use `-v` when you need a clean slate (e.g., after changing `.env` values used at `airflow-init` time).
 
 ## 📊 Data Source
-[CoinGecko API](https://www.coingecko.com/en/api) (free tier, no key required)
+[CoinGecko API](https://www.coingecko.com/en/api) (free "Demo" plan — a personal API key is sent via the `x-cg-demo-api-key` header to lift the anonymous rate limit)
 - `/coins/markets` → daily market snapshot
 - `/coins/{id}` → coin metadata
 - `/coins/{id}/market_chart` → historical price data
