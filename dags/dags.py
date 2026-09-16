@@ -20,7 +20,7 @@ with DAG(
     description="Extrai dados da CoinGecko, carrega no Snowflake e roda transformações dbt",
     start_date=datetime(2026, 8, 27, tzinfo=timezone.utc),
     schedule="@daily",
-    catchup=True,
+    catchup=False,
     tags=["crypto", "portfolio"],
 ) as dag:
 
